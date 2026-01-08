@@ -1,0 +1,389 @@
+"""
+Agent Orchestration Layer for Phase 3 Todo AI Chatbot.
+Implements the FETCH → APPEND → RUN → PERSIST → RESPOND lifecycle.
+Uses OpenAI for intent recognition and response generation.
+"""
+from typing import List, Dict, Any, Optional
+from sqlmodel import Session
+from . import crud
+from .mcp_official_wrapper import mcp_official_wrapper as mcp_server
+from .agents_sdk import run_todo_agent
+from .openai_client import openai_client
+import uuid
+
+
+class AgentOrchestrator:
+    """
+    Orchestrates the conversation flow between the user and the MCP tools.
+    Uses OpenAI for intelligent intent recognition and response generation.
+    Strictly follows the Phase 3 Agent Behavior Specification.
+    """
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def handle_message(self, user_id: str, conversation_id: str, message_text: str) -> str:
+        """
+        Main orchestration loop: FETCH → APPEND → RUN → PERSIST → RESPOND.
+        """
+        # 1. FETCH: Retrieve unsummarized conversation history from DB
+        history = crud.get_messages(self.session, conversation_id, user_id)
+        history_dicts = [
+            {"role": m.role, "content": m.content}
+            for m in history
+        ]
+
+        # 2. APPEND: The current user message is appended to the context for the model
+        # (Implicitly handled by passing it along with history to the "RUN" phase)
+
+        # 3. RUN: Use OpenAI for intent recognition and response generation
+        response_text = self._orchestrate_llm_logic(
+            user_id, conversation_id, message_text, history_dicts
+        )
+
+        # 4. PERSIST: Save both user input and agent response to DB
+        crud.save_message(self.session, conversation_id, user_id, "user", message_text)
+        crud.save_message(self.session, conversation_id, user_id, "assistant", response_text)
+
+        # 5. RESPOND: Deliver the final NL response
+        return response_text
+
+    def _orchestrate_llm_logic(
+        self, user_id: str, conversation_id: str, message_text: str, history: List[Dict[str, str]]
+    ) -> str:
+        """
+        Uses OpenAI for intent recognition and generates appropriate responses.
+        Enforces the Two-Step Mutation Rule for destructive operations.
+        """
+        # Get user's tasks for ID mapping (user-friendly 1-based IDs)
+        user_tasks = crud.get_tasks_by_user(self.session, user_id)
+        id_mapping = {i+1: t.id for i, t in enumerate(user_tasks)}
+
+        # Check for pending confirmation from history
+        def was_confirmed():
+            if not history:
+                return False
+            # Find the last assistant message
+            last_assistant_msg = next(
+                (m for m in reversed(history) if m.get("role") == "assistant"), None
+            )
+            if not last_assistant_msg:
+                return False
+
+            # Check if last assistant message was a confirmation request
+            content_lower = last_assistant_msg.get("content", "").lower()
+            is_request = "are you sure" in content_lower or "confirm" in content_lower
+            # Check if current user message is affirmative
+            msg_lower = message_text.lower().strip()
+            is_affirmative = msg_lower in ["yes", "yeah", "yep", "confirm", "do it", "sure"]
+            return is_request and is_affirmative
+
+        # Handle confirmation response (Step 2 of Two-Step Mutation Rule)
+        if was_confirmed():
+            last_assistant_msg = next(
+                (m for m in reversed(history) if m.get("role") == "assistant"), None
+            )
+            import re
+
+            # Recover user-friendly ID from confirmation prompt
+            match = re.search(r"task\s*(\d+)", last_assistant_msg.get("content", ""))
+            if match:
+                user_task_id = int(match.group(1))
+                # Convert to database ID
+                db_task_id = id_mapping.get(user_task_id, user_task_id)
+
+                # Recover the original intent from history
+                # Look for the user's original request before the confirmation prompt
+                original_intent = None
+                original_message = None
+                for m in reversed(history):
+                    if m.get("role") == "user":
+                        original_intent = m.get("content", "").lower()
+                        original_message = m.get("content", "")
+                        break
+
+                # Was it a delete?
+                if original_intent and ("delete" in original_intent or "remove" in original_intent):
+                    mcp_server.handle_delete_task(self.session, db_task_id, user_id)
+                    return f"Deleted task {user_task_id}"
+
+                # Was it a rename?
+                if original_intent and ("rename" in original_intent or "change" in original_intent):
+                    # Recover new title from original message
+                    rename_match = re.search(
+                        r"(?:rename|change|update).*?(?:task\s*\d+)?\s*(?:to\s*|=)\s*(.+)", original_message
+                    )
+                    if rename_match:
+                        new_title = rename_match.group(1).strip().strip('"\'""')
+                        mcp_server.handle_update_task(
+                            self.session, db_task_id, user_id, new_title=new_title
+                        )
+                        return f"Updated task {user_task_id} to: {new_title}"
+
+            return "I've processed your confirmation, but couldn't recover the task details. Please try the command again."
+
+        # Use OpenAI for intent classification
+        try:
+            intent_data = openai_client.classify_intent(message_text, history)
+        except RuntimeError as e:
+            # Fallback to rule-based parsing if OpenAI fails
+            return self._fallback_logic(message_text, history, user_id)
+
+        intent = intent_data.get("intent", "unknown")
+        task_id = intent_data.get("task_id")
+        task_title = intent_data.get("task_title")
+        new_title = intent_data.get("new_title")
+        needs_confirmation = intent_data.get("needs_confirmation", False)
+
+        # Handle based on intent
+        if intent == "create":
+            title = task_title or message_text
+            # Extract title from message if not classified
+            if not task_title:
+                for prefix in ["add ", "create ", "remind me to ", "new task: "]:
+                    if title.lower().startswith(prefix):
+                        title = title[len(prefix):]
+                        break
+            if title:
+                mcp_server.handle_create_task(self.session, user_id, title.strip())
+                return f"Created task: {title.strip()}"
+
+        elif intent == "read":
+            tasks = crud.get_tasks_by_user(self.session, user_id)
+            if not tasks:
+                return "You have no tasks in your list."
+            # Use user-friendly 1-based index for display
+            task_list = "\n".join(
+                [f"- [{'x' if t.completed else ' '}] {i+1}: {t.title}" for i, t in enumerate(tasks)]
+            )
+            return f"Here is your task list:\n{task_list}"
+
+        elif intent == "delete":
+            if task_id:
+                # Convert user-friendly ID to database ID
+                db_task_id = id_mapping.get(task_id, task_id)
+                # Check if task exists
+                existing_task = crud.get_task_by_user(self.session, db_task_id, user_id)
+                if existing_task:
+                    if needs_confirmation or was_confirmed():
+                        mcp_server.handle_delete_task(self.session, db_task_id, user_id)
+                        return f"Deleted task {task_id}: {existing_task.title}"
+                    else:
+                        return f"Are you sure you want to delete task {task_id} ({existing_task.title})? (yes/no)"
+                else:
+                    # Task ID doesn't exist, try to find by title
+                    if task_title:
+                        for t in user_tasks:
+                            if t.title.lower() == task_title.lower():
+                                if needs_confirmation or was_confirmed():
+                                    mcp_server.handle_delete_task(self.session, t.id, user_id)
+                                    return f"Deleted task: {t.title}"
+                                else:
+                                    return f"Are you sure you want to delete task {t.title}? (yes/no)"
+                    return f"Task {task_id} not found. Use 'list my tasks' to see available tasks."
+            else:
+                # Try to find task by title
+                for t in user_tasks:
+                    if task_title and t.title.lower() == task_title.lower():
+                        task_id = t.id
+                        break
+                if task_id:
+                    return f"Are you sure you want to delete task {task_title}? (yes/no)"
+                return "Which task would you like to delete? Please provide the task ID or title."
+
+        elif intent == "update_rename":
+            if task_id and new_title:
+                # Convert user-friendly ID to database ID
+                db_task_id = id_mapping.get(task_id, task_id)
+                # Check if task exists first
+                existing_task = crud.get_task_by_user(self.session, db_task_id, user_id)
+                if existing_task:
+                    if needs_confirmation or was_confirmed():
+                        mcp_server.handle_update_task(
+                            self.session, db_task_id, user_id, new_title=new_title
+                        )
+                        return f"Updated task {task_id} to: {new_title}"
+                    else:
+                        return f"Are you sure you want to rename task {task_id} ({existing_task.title}) to '{new_title}'? (yes/no)"
+                else:
+                    # Task ID doesn't exist, try to find by title
+                    if task_title:
+                        for t in user_tasks:
+                            if t.title.lower() == task_title.lower():
+                                if needs_confirmation or was_confirmed():
+                                    mcp_server.handle_update_task(
+                                        self.session, t.id, user_id, new_title=new_title
+                                    )
+                                    return f"Updated task to: {new_title}"
+                                else:
+                                    return f"Are you sure you want to rename task '{t.title}' to '{new_title}'? (yes/no)"
+                    return f"Task {task_id} not found. Use 'list my tasks' to see available tasks."
+            elif not task_id and task_title and new_title:
+                # Find task by old title
+                for t in user_tasks:
+                    if t.title.lower() == task_title.lower():
+                        task_id = t.id
+                        break
+                if task_id:
+                    if needs_confirmation or was_confirmed():
+                        mcp_server.handle_update_task(
+                            self.session, task_id, user_id, new_title=new_title
+                        )
+                        return f"Updated task to: {new_title}"
+                    else:
+                        return f"Are you sure you want to rename '{task_title}' to '{new_title}'? (yes/no)"
+            return "Please specify which task to rename and the new title."
+
+        elif intent == "update_complete":
+            if task_id:
+                # Convert user-friendly ID to database ID
+                db_task_id = id_mapping.get(task_id, task_id)
+                # Check if task exists first
+                existing_task = crud.get_task_by_user(self.session, db_task_id, user_id)
+                if existing_task:
+                    result = mcp_server.handle_update_task(
+                        self.session, db_task_id, user_id, completed=True
+                    )
+                    return f"Completed task {task_id}: {existing_task.title}"
+                else:
+                    # Task ID doesn't exist, try to find by title
+                    if task_title:
+                        for t in user_tasks:
+                            if t.title.lower() == task_title.lower():
+                                mcp_server.handle_update_task(
+                                    self.session, t.id, user_id, completed=True
+                                )
+                                return f"Completed task: {t.title}"
+                    return f"Task {task_id} not found. Use 'list my tasks' to see available tasks."
+            else:
+                # Try to find task by title
+                for t in user_tasks:
+                    if task_title and t.title.lower() == task_title.lower():
+                        task_id = t.id
+                        break
+                if task_id:
+                    result = mcp_server.handle_update_task(
+                        self.session, task_id, user_id, completed=True
+                    )
+                    return f"Completed task: {t.title}"
+                return "Which task would you like to complete? Please provide the task ID or title."
+
+        elif intent == "confirm":
+            # Already handled by was_confirmed() check at the top
+            return "I've processed your confirmation."
+
+        elif intent == "unknown":
+            # Use full chat with OpenAI for general queries
+            try:
+                return openai_client.chat(message_text, history)
+            except RuntimeError:
+                return self._fallback_logic(message_text, history, user_id)
+
+        return "I'm sorry, I didn't quite catch that. You can ask me to add, list, complete, rename, or delete tasks."
+
+    def _fallback_logic(
+        self, message_text: str, history: List[Dict[str, str]], user_id: str
+    ) -> str:
+        """
+        Fallback rule-based logic when OpenAI is unavailable.
+        """
+        msg_lower = message_text.lower().strip()
+
+        # Check for pending confirmation
+        def was_confirmed():
+            if not history:
+                return False
+            last_assistant_msg = next(
+                (m for m in reversed(history) if m.get("role") == "assistant"), None
+            )
+            if not last_assistant_msg:
+                return False
+            is_request = "are you sure" in last_assistant_msg.get("content", "").lower()
+            is_affirmative = msg_lower in ["yes", "yeah", "yep", "confirm", "do it"]
+            return is_request and is_affirmative
+
+        if was_confirmed():
+            last_assistant_msg = next(
+                (m for m in reversed(history) if m.get("role") == "assistant"), None
+            )
+            import re
+            match = re.search(r"task\s*(\d+)", last_assistant_msg.get("content", ""))
+            if match:
+                task_id = int(match.group(1))
+                if "delete" in last_assistant_msg.get("content", "").lower():
+                    mcp_server.handle_delete_task(self.session, task_id, user_id)
+                    return f"Deleted task {task_id}"
+            return "Confirmation processed."
+
+        import re
+
+        # DELETE Intent
+        if "delete" in msg_lower or "remove" in msg_lower:
+            match = re.search(r"task\s*(\d+)", msg_lower)
+            task_id = int(match.group(1)) if match else None
+            if task_id:
+                return f"Are you sure you want to delete task {task_id}? (yes/no)"
+            return "Please specify which task to delete."
+
+        # CREATE Intent
+        if "add" in msg_lower or "remind me" in msg_lower or "create" in msg_lower:
+            title = message_text
+            for prefix in ["add", "remind me to", "create"]:
+                title = re.sub(f"^{prefix}\s*", "", title, flags=re.IGNORECASE).strip()
+            if title:
+                mcp_server.handle_create_task(self.session, user_id, title)
+                return f"Created task: {title}"
+            return "What would you like to add to your todo list?"
+
+        # LIST Intent
+        if "list" in msg_lower or "show" in msg_lower or "my tasks" in msg_lower:
+            tasks = crud.get_tasks_by_user(self.session, user_id)
+            if not tasks:
+                return "You have no tasks in your list."
+            task_list = "\n".join(
+                [f"- [{'x' if t.completed else ' '}] {t.id}: {t.title}" for t in tasks]
+            )
+            return f"Here is your task list:\n{task_list}"
+
+        # COMPLETE Intent
+        if any(k in msg_lower for k in ["complete", "finish", "done", "check"]):
+            match = re.search(r"(\d+)", msg_lower)
+            if match:
+                task_id = int(match.group(1))
+                result = mcp_server.handle_update_task(
+                    self.session, task_id, user_id, completed=True
+                )
+                title = result.get("task", {}).get("title") or task_id
+                return f"Completed task: {title}"
+            return "Which task number would you like to complete?"
+
+        # RENAME/UPDATE Intent - Pattern: "update [old title] to [new title]" or "rename [old title] to [new title]"
+        if ("update" in msg_lower or "rename" in msg_lower or "change" in msg_lower) and " to " in msg_lower:
+            # Split at the LAST " to " to get old_title and new_title
+            # Pattern: "update task to buy grocery to shopping" -> old: "task to buy grocery", new: "shopping"
+            parts = msg_lower.rsplit(" to ", 1)
+            if len(parts) == 2:
+                before_to = parts[0].strip()
+                new_title = parts[1].strip()
+
+                # Extract old_title from before_to (remove "update", "rename", "change", "task" prefixes)
+                old_title = re.sub(r"^(?:update|rename|change)\s+(?:task\s+)?", "", before_to).strip()
+
+                # Find task by old title (partial match)
+                tasks = crud.get_tasks_by_user(self.session, user_id)
+                for t in tasks:
+                    if old_title in t.title.lower() or t.title.lower() in old_title:
+                        task_id = t.id
+                        # Execute the rename
+                        mcp_server.handle_update_task(self.session, task_id, user_id, new_title=new_title)
+                        return f"Updated task {task_id} to: {new_title}"
+
+            # Try simpler pattern for "update [id] to [new title]"
+            match = re.search(r"(?:update|rename|change)\s+(?:task\s+)?(\d+)\s+to\s+(.+)", msg_lower)
+            if match:
+                task_id = int(match.group(1))
+                new_title = match.group(2).strip()
+                mcp_server.handle_update_task(self.session, task_id, user_id, new_title=new_title)
+                return f"Updated task {task_id} to: {new_title}"
+
+        return "I'm sorry, I didn't quite catch that. You can ask me to add, list, complete, rename, or delete tasks."
