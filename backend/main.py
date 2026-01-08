@@ -7,6 +7,7 @@ from fastapi import Body
 from dotenv import load_dotenv
 import os
 import logging
+import sys
 
 # Configure logging
 logger = logging.getLogger(__name__)

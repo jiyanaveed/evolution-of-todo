@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install axios)",
+      "Bash(cat package.json)",
+      "Bash(python3 -c \"\nimport sqlite3\nconn = sqlite3.connect\\(''../todo.db''\\)\ncursor = conn.cursor\\(\\)\ncursor.execute\\(''PRAGMA table_info\\(tasks\\);''\\)\nrows = cursor.fetchall\\(\\)\nfor row in rows:\n    print\\(row\\)\nconn.close\\(\\)\n\")",
+      "Bash(python3 -c \"\nimport sqlite3\nconn = sqlite3.connect\\(''todo.db''\\)\ncursor = conn.cursor\\(\\)\ncursor.execute\\(''PRAGMA table_info\\(tasks\\);''\\)\nrows = cursor.fetchall\\(\\)\nprint\\(''Tasks table structure:''\\)\nfor row in rows:\n    print\\(f''  {row}''\\)\nconn.close\\(\\)\n\")",
+      "Bash(python3 -c \"\nimport sqlite3\nconn = sqlite3.connect\\(''todo.db''\\)\ncursor = conn.cursor\\(\\)\ncursor.execute\\(''SELECT name FROM sqlite_master WHERE type=\"\"table\"\";''\\)\ntables = cursor.fetchall\\(\\)\nprint\\(''Tables in database:''\\)\nfor table in tables:\n    print\\(f''  {table[0]}''\\)\n    cursor.execute\\(f''PRAGMA table_info\\({table[0]}\\);''\\)\n    columns = cursor.fetchall\\(\\)\n    for col in columns:\n        print\\(f''    {col}''\\)\nconn.close\\(\\)\n\")",
+      "Bash(curl -X POST \"http://127.0.0.1:8000/auth/register\" -H \"Content-Type: application/json\" -d '{\"\"email\"\": \"\"testuser123@example.com\"\", \"\"password\"\": \"\"testpassword123\"\"}')",
+      "Bash(curl -X POST \"http://127.0.0.1:8000/auth/login\" -H \"Content-Type: application/json\" -d '{\"\"email\"\": \"\"testuser123@example.com\"\", \"\"password\"\": \"\"testpassword123\"\"}')",
+      "Bash(sqlite3:*)",
+      "Bash(mkdir -p .spec-kit specs specs/features specs/api specs/database specs/ui specs-history)",
+      "Bash(cat phase-1/specs/feature-*.md)",
+      "Bash(cat phase-2/specs/backend/backend-spec.md)",
+      "Bash(cat phase-2/specs/frontend/frontend-spec.md)",
+      "WebSearch",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:www.better-auth.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:sdk.vercel.ai)",
+      "WebFetch(domain:ai-sdk.dev)",
+      "WebFetch(domain:better-auth.com)",
+      "WebFetch(domain:docs.openai.com)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(curl -X POST http://localhost:8000/api/9aa83aae-d3d1-4533-a170-8cc297fc42ce/chat -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5YWE4M2FhZS1kM2QxLTQ1MzMtYTE3MC04Y2MyOTdmYzQyY2UiLCJlbWFpbCI6ImNoYXR1c2VyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzY4MzAzMzcyLCJpYXQiOjE3Njc2OTg1NzJ9.-5CyMuVwYf0-V4kOQDSEiYQRys4EYUkYrDsJpwxJdwo\" -H \"Content-Type: application/json\" -d '{\"\"message\"\":\"\"list my tasks\"\"}')",
+      "Bash(curl -X POST http://localhost:8000/api/auth/register -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"freshuser@example.com\"\", \"\"password\"\":\"\"password123\"\"}')",
+      "Bash(curl -X POST http://localhost:8000/api/be1f4fc6-2ce6-4bef-85c3-2e5b962d2bb6/chat -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZTFmNGZjNi0yY2U2LTRiZWYtODVjMy0yZTViOTYyZDJiYjYiLCJlbWFpbCI6ImZyZXNodXNlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2ODMwMzg3NCwiaWF0IjoxNzY3Njk5MDc0fQ.uWV8JQD1mdIhUEQHk7ayFnByyw-N3GcjGKT05OPxIPI\" -H \"Content-Type: application/json\" -d '{\"\"message\"\":\"\"Say hello\"\"}')",
+      "Bash(PYTHONPATH=./backend uvicorn backend.main:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -X POST http://localhost:8000/api/auth/register -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"finaltest@example.com\"\", \"\"password\"\":\"\"password123\"\"}')",
+      "Bash(curl:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

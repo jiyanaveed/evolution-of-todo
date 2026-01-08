@@ -1,0 +1,46 @@
+# Spec-Kit Configuration for Evolution of Todo
+
+project:
+  name: "The Evolution of Todo"
+  theme: "From CLI to Distributed Cloud-Native AI Systems"
+  goal: "Students act as Product Architects using AI + Spec-Driven Development"
+
+phases:
+  - id: "phase1-console"
+    name: "Phase I - Console Application"
+    description: "In-memory Python console app"
+    status: "completed"
+    specs_path: "specs-history/phase1-snapshot.md"
+
+  - id: "phase2-web"
+    name: "Phase II - Full-Stack Web App"
+    description: "Next.js frontend + FastAPI backend"
+    status: "completed"
+    specs_path: "specs-history/phase2-snapshot.md"
+
+  - id: "phase3-chatbot"
+    name: "Phase III - Chatbot Integration"
+    description: "AI-powered chatbot interface"
+    status: "planned"
+    specs_path: "specs/phase3-chatbot-spec.md"
+
+specs:
+  source_dirs:
+    - "specs/"
+    - "specs-history/"
+  output_format: "markdown"
+  validation:
+    required_sections:
+      - "Overview"
+      - "Requirements"
+      - "Status"
+
+repository:
+  structure:
+    - ".spec-kit/"
+    - "specs/"
+    - "specs-history/"
+    - "frontend/"
+    - "backend/"
+    - "CLAUDE.md"
+    - "README.md"
