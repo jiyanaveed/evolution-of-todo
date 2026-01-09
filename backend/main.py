@@ -499,3 +499,8 @@ def mcp_update_task(
 
     return mcp_server.handle_update_task(session, user_id, task_id, title, description)
 
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+
