@@ -20,19 +20,20 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
             : 'bg-gray-100 text-gray-800 rounded-bl-none'
         }`}
       >
-        <ReactMarkdown
-          className="prose prose-sm max-w-none"
-          components={{
-            p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-            ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2" {...props} />,
-            ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2" {...props} />,
-            li: ({node, ...props}) => <li className="mb-1" {...props} />,
-            strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
-            em: ({node, ...props}) => <em className="italic" {...props} />,
-          }}
-        >
-          {content}
-        </ReactMarkdown>
+        <div className="prose prose-sm max-w-none">
+          <ReactMarkdown
+            components={{
+              p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+              ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2" {...props} />,
+              ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2" {...props} />,
+              li: ({node, ...props}) => <li className="mb-1" {...props} />,
+              strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+              em: ({node, ...props}) => <em className="italic" {...props} />,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   );

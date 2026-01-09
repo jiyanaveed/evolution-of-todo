@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task } from '../../types/task';
+import { Task } from '@/types/task';
 
 interface QuestCardProps {
   task: Task & { xp?: number; status?: string; description?: string };
@@ -14,7 +14,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ task, status, onSelect, onToggle 
 
   const handleToggle = () => {
     if (status === 'locked') return;
-    
+
     if (!isCompleted) {
       setShowAnimation(true);
       setTimeout(() => {
@@ -48,7 +48,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ task, status, onSelect, onToggle 
   return (
     <div
       className={`quest-card rounded-xl border-2 p-4 relative overflow-hidden ${getStatusColor()} transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer comic-panel`}
-      onClick={() => status !== 'locked' && onSelect(task)}
+      onClick={() => (status as 'pending' | 'completed' | 'locked') !== 'locked' && onSelect(task)}
     >
       {/* Animated completion effect */}
       {showAnimation && (
@@ -61,7 +61,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ task, status, onSelect, onToggle 
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center">
           <span className="text-2xl mr-2">{getStatusIcon()}</span>
-          <h3 className={`font-bold ${status === 'locked' ? 'text-gray-400' : 'text-yellow-200'}`}>
+          <h3 className={`font-bold ${(status as 'pending' | 'completed' | 'locked') === 'locked' ? 'text-gray-400' : 'text-yellow-200'}`}>
             {task.title}
           </h3>
         </div>
@@ -74,30 +74,30 @@ const QuestCard: React.FC<QuestCardProps> = ({ task, status, onSelect, onToggle 
 
       {/* Quest description */}
       {task.description && (
-        <p className={`text-sm mb-3 ${status === 'locked' ? 'text-gray-500' : 'text-gray-300'}`}>
+        <p className={`text-sm mb-3 ${(status as 'pending' | 'completed' | 'locked') === 'locked' ? 'text-gray-500' : 'text-gray-300'}`}>
           {task.description}
         </p>
       )}
 
       {/* Quest status and actions */}
       <div className="flex justify-between items-center mt-4">
-        <div className={`badge ${status === 'completed' ? 'badge-completed' : status === 'pending' ? 'badge-pending' : 'badge-locked'}`}>
-          {status === 'completed' ? 'Completed' : status === 'pending' ? 'Pending' : 'Locked'}
+        <div className={`badge ${(status as 'pending' | 'completed' | 'locked') === 'completed' ? 'badge-completed' : (status as 'pending' | 'completed' | 'locked') === 'pending' ? 'badge-pending' : 'badge-locked'}`}>
+          {(status as 'pending' | 'completed' | 'locked') === 'completed' ? 'Completed' : (status as 'pending' | 'completed' | 'locked') === 'pending' ? 'Pending' : 'Locked'}
         </div>
 
-        {status !== 'locked' ? (
+        {(status as 'pending' | 'completed' | 'locked') !== 'locked' ? (
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleToggle();
             }}
-            disabled={status === 'locked'}
+            disabled={(status as 'pending' | 'completed' | 'locked') === 'locked'}
             className={`
               rpg-button px-3 py-1 text-xs font-bold transition-all
               ${isCompleted
                 ? 'bg-green-600 hover:bg-green-700 text-white'
                 : 'bg-yellow-600 hover:bg-yellow-700 text-yellow-900'}
-              ${status === 'locked' ? 'opacity-50 cursor-not-allowed' : ''}
+              ${(status as 'pending' | 'completed' | 'locked') === 'locked' ? 'opacity-50 cursor-not-allowed' : ''}
             `}
           >
             {isCompleted ? 'Completed!' : 'Accept Quest'}

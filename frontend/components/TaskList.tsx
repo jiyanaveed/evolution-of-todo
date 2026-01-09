@@ -44,7 +44,7 @@ const TaskList = ({ tasks, onUpdateTask, onDeleteTask, onToggleTask, isLoading =
           <TaskItem
             key={task.id}
             task={task}
-            onUpdateTask={(id, taskData) => onUpdateTask(id, taskData.title)}
+            onUpdateTask={(id, taskData) => onUpdateTask(id, taskData.title || task.title)}
             onDeleteTask={onDeleteTask}
             onToggleTask={onToggleTask}
             isLoading={isLoading}
