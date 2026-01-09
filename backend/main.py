@@ -19,7 +19,7 @@ logging.basicConfig(
 # Load environment variables
 load_dotenv()
 
-from backend.database import get_session, init_db
+from .database import get_session, init_db
 from backend.models import (
     TaskResponse, TaskCreate, TaskUpdate,
     UserCreate, UserLogin, UserResponse,
