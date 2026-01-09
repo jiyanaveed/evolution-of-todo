@@ -14,7 +14,7 @@
     }
   ],
   "env": {
-    "NEXT_PUBLIC_API_BASE_URL": "@api-base-url"
+    "NEXT_PUBLIC_API_BASE_URL": "https://evolution-of-todo-backend.onrender.com"
   },
   "regions": ["iad1"]
 }
