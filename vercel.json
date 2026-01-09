@@ -1,4 +1,13 @@
 {
-  "framework": "nextjs",
-  "root": "frontend"
+  "version": 2,
+  "name": "evolution-of-todo",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_BASE_URL": "https://evolution-of-todo-backend.onrender.com"
+  }
 }
