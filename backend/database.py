@@ -28,12 +28,17 @@ else:
 # For Neon PostgreSQL, ensure SSL is required
 if DATABASE_URL.startswith("postgresql"):
     # Neon requires SSL, add pool settings for serverless
+    # Use psycopg2 driver explicitly for PostgreSQL
     engine = create_engine(
         DATABASE_URL,
         echo=False,
         pool_size=5,
         max_overflow=10,
         pool_pre_ping=True,
+        # Explicitly specify the psycopg2 driver
+        connect_args={
+            "sslmode": "require",  # Required for Neon
+        }
     )
 else:
     # SQLite configuration
