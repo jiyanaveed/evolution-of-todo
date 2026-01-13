@@ -78,7 +78,9 @@ This project demonstrates the evolution of a simple todo application through mul
 
    # Copy environment variables
    cp .env.example .env.local
-   # Edit .env.local if needed (defaults to localhost:8000)
+   # Edit .env.local and add your OpenAI ChatKit domain key
+   # Get the key from: https://platform.openai.com/settings/organization/general
+   # See docs/CHATKIT_SETUP.md for detailed instructions
 
    # Run the frontend
    npm run dev

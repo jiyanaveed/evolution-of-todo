@@ -127,6 +127,21 @@ Custom hook for managing task state and API operations.
 ## Environment Variables
 
 - `NEXT_PUBLIC_API_BASE_URL` - Base URL for the backend API (default: http://localhost:8000)
+- `NEXT_PUBLIC_OPENAI_DOMAIN_KEY` - OpenAI ChatKit domain key for AI chat features (get from OpenAI Platform)
+
+### Setting up OpenAI ChatKit
+
+For AI-powered task management features:
+
+1. Get your domain key from [OpenAI Platform](https://platform.openai.com/settings/organization/general)
+2. Add your domain to the Domain Allowlist (e.g., `http://localhost:3000` for local dev)
+3. Copy the generated domain key
+4. Add it to your `.env.local`:
+   ```bash
+   NEXT_PUBLIC_OPENAI_DOMAIN_KEY=domain_pk_your_key_here
+   ```
+
+For detailed ChatKit setup instructions, see [ChatKit Setup Guide](../docs/CHATKIT_SETUP.md).
 
 ## Development
 

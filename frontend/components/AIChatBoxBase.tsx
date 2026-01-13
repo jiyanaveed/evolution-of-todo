@@ -1,7 +1,8 @@
 /**
- * AI Chat Component using direct API calls to backend
- * Phase 3: OpenAI ChatKit Implementation
+ * AI Chat Component using direct API calls to backend with OpenAI ChatKit domain key support
+ * Phase 3: OpenAI ChatKit Implementation with domain key
  */
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -85,10 +86,12 @@ export default function AIChatBox({ conversationId, onMutationSuccess }: ChatBox
       console.log('[DEBUG] Calling API:', url);
       console.log('[DEBUG] User ID:', user.id);
       console.log('[DEBUG] Token present:', !!token);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'OpenAI-Domain-Key': process.env.NEXT_PUBLIC_OPENAI_DOMAIN_KEY || '', // Add domain key if available
           ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
@@ -220,5 +223,6 @@ export default function AIChatBox({ conversationId, onMutationSuccess }: ChatBox
   );
 }
 
-// Note: This component assumes the useAuth hook is available from the AuthContext
-// If not available, you'll need to import it: import { useAuth } from '../contexts/AuthContext';
+// Note: This component sends messages to your backend which then communicates with OpenAI
+// The OpenAI domain key is passed in the request headers for security
+// Make sure to set NEXT_PUBLIC_OPENAI_DOMAIN_KEY in your environment
