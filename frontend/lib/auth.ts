@@ -1,14 +1,7 @@
 import { betterAuth } from "better-auth";
 
-// Initialize BetterAuth with conditional database configuration for serverless environments
-const databaseConfig = process.env.DATABASE_URL
-  ? {
-      provider: "postgresql" as const,
-      url: process.env.DATABASE_URL,
-    }
-  : undefined;
-
+// Basic auth configuration without database for client-side usage
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-for-development",
-  ...(databaseConfig && { database: databaseConfig }),
+  // Database will be configured at runtime in the API routes for serverless compatibility
 });
