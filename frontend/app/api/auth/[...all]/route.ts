@@ -6,32 +6,37 @@
 import { toNextJsHandler } from "better-auth/next-js";
 import { NextRequest } from "next/server";
 
-export async function GET(request: NextRequest, { params }: { params: { all: string[] } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ all: string[] }> }) {
+  const resolvedParams = await params;
   const { auth } = await import("@/lib/auth");
   const handler = toNextJsHandler(auth);
-  return handler.GET(request, { params });
+  return handler.GET(request, { params: resolvedParams });
 }
 
-export async function POST(request: NextRequest, { params }: { params: { all: string[] } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ all: string[] }> }) {
+  const resolvedParams = await params;
   const { auth } = await import("@/lib/auth");
   const handler = toNextJsHandler(auth);
-  return handler.POST(request, { params });
+  return handler.POST(request, { params: resolvedParams });
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { all: string[] } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ all: string[] }> }) {
+  const resolvedParams = await params;
   const { auth } = await import("@/lib/auth");
   const handler = toNextJsHandler(auth);
-  return handler.PUT(request, { params });
+  return handler.PUT(request, { params: resolvedParams });
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { all: string[] } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ all: string[] }> }) {
+  const resolvedParams = await params;
   const { auth } = await import("@/lib/auth");
   const handler = toNextJsHandler(auth);
-  return handler.DELETE(request, { params });
+  return handler.DELETE(request, { params: resolvedParams });
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { all: string[] } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ all: string[] }> }) {
+  const resolvedParams = await params;
   const { auth } = await import("@/lib/auth");
   const handler = toNextJsHandler(auth);
-  return handler.PATCH(request, { params });
+  return handler.PATCH(request, { params: resolvedParams });
 }
