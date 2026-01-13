@@ -1,10 +1,37 @@
 /**
  * Better Auth API Route Handler
  * Phase 3: Authentication Endpoint
+ * Using dynamic import to prevent build-time database initialization
  */
-import { auth } from "@/lib/auth";
 import { toNextJsHandler } from "better-auth/next-js";
+import { NextRequest } from "next/server";
 
-const { GET, POST, PUT, DELETE, PATCH } = toNextJsHandler(auth);
+export async function GET(request: NextRequest, { params }: { params: { all: string[] } }) {
+  const { auth } = await import("@/lib/auth");
+  const handler = toNextJsHandler(auth);
+  return handler.GET(request, { params });
+}
 
-export { GET, POST, PUT, DELETE, PATCH };
+export async function POST(request: NextRequest, { params }: { params: { all: string[] } }) {
+  const { auth } = await import("@/lib/auth");
+  const handler = toNextJsHandler(auth);
+  return handler.POST(request, { params });
+}
+
+export async function PUT(request: NextRequest, { params }: { params: { all: string[] } }) {
+  const { auth } = await import("@/lib/auth");
+  const handler = toNextJsHandler(auth);
+  return handler.PUT(request, { params });
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: { all: string[] } }) {
+  const { auth } = await import("@/lib/auth");
+  const handler = toNextJsHandler(auth);
+  return handler.DELETE(request, { params });
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { all: string[] } }) {
+  const { auth } = await import("@/lib/auth");
+  const handler = toNextJsHandler(auth);
+  return handler.PATCH(request, { params });
+}
