@@ -36,3 +36,5 @@ print(f"Total users after deletion: {count}")
 
 conn.close()
 print("Database connection closed.")
+
+#test
