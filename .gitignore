@@ -69,3 +69,5 @@ htmlcov/
 # Build outputs
 *.pyc
 .cache/
+.aider*
+*.tsbuildinfo

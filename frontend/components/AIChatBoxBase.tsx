@@ -19,9 +19,11 @@ interface Message {
 interface ChatBoxProps {
   conversationId: string;
   onMutationSuccess: () => void;
+  /** Tighter layout for the main dashboard (same behavior, smaller height) */
+  compact?: boolean;
 }
 
-export default function AIChatBox({ conversationId, onMutationSuccess }: ChatBoxProps) {
+export default function AIChatBox({ conversationId, onMutationSuccess, compact = false }: ChatBoxProps) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,9 +85,6 @@ export default function AIChatBox({ conversationId, onMutationSuccess }: ChatBox
 
       // Call the new backend API endpoint
       const url = `${normalizedBaseUrl}/api/${user.id}/chat`;
-      console.log('[DEBUG] Calling API:', url);
-      console.log('[DEBUG] User ID:', user.id);
-      console.log('[DEBUG] Token present:', !!token);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -152,13 +151,19 @@ export default function AIChatBox({ conversationId, onMutationSuccess }: ChatBox
     }
   };
 
+  const heightClass = compact
+    ? 'h-[min(20rem,42vh)] sm:h-[min(22rem,45vh)]'
+    : 'h-[550px]';
+
   return (
-    <div className="flex flex-col h-[550px] border border-gray-200 rounded-xl bg-white shadow-lg overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-5 space-y-4">
+    <div
+      className={`flex flex-col ${heightClass} border border-gray-200 rounded-xl bg-white shadow-lg overflow-hidden`}
+    >
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-400 mt-20">
-            <p className="text-lg">Start a conversation with your AI assistant</p>
-            <p className="text-sm mt-2">Try: &quot;list my tasks&quot; or &quot;add buy groceries&quot;</p>
+          <div className={`text-center text-gray-400 ${compact ? 'mt-6' : 'mt-20'}`}>
+            <p className={compact ? 'text-sm' : 'text-lg'}>Start a conversation with your AI assistant</p>
+            <p className="text-xs sm:text-sm mt-2">Try: &quot;list my tasks&quot; or &quot;add buy groceries&quot;</p>
           </div>
         )}
         {messages.map((m) => (

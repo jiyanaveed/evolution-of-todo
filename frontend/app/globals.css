@@ -231,3 +231,50 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+/*
+ * Kanban task card row: not Tailwind — arbitrary `grid-cols-[auto_minmax(0,1fr)_auto]`
+ * can be dropped by JIT/parsing, leaving a broken layout (one char per line).
+ * Plain CSS guarantees three columns: controls | title (grows) | actions.
+ */
+@layer components {
+  /* To Do / Done split — same as arbitrary Tailwind, but commas in `minmax(0,1fr)` can fail in JIT. */
+  .kanban-board-cols {
+    display: grid;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .kanban-board-cols {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  .kanban-task-row {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .kanban-task-mid {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .kanban-task-title {
+    min-width: 0;
+    width: 100%;
+    word-break: normal;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+}

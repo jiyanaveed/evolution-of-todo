@@ -1,3 +1,13 @@
+import os
+import sys
+
+# When running `uvicorn main:app` from the backend/ directory, put the project root
+# on sys.path so `import backend` (used below) resolves. Safe when run as
+# `uvicorn backend.main:app` from the repo root as well.
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 from fastapi import FastAPI, Depends, HTTPException, Body
 from sqlmodel import Session
 from typing import List, Optional
@@ -5,9 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from fastapi import Body
 from dotenv import load_dotenv
-import os
 import logging
-import sys
+import uuid
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -16,15 +25,17 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-# Load environment variables
+# Load environment variables (repo root, then backend/.env for local dev)
 load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
-from .database import get_session, init_db
+from backend.database import get_session, init_db
 from backend.models import (
     TaskResponse, TaskCreate, TaskUpdate,
     UserCreate, UserLogin, UserResponse,
     Token, TokenData,
-    MessageResponse
+    MessageResponse,
+    ChatRequest, ChatResponse,
 )
 from backend import crud
 from backend.auth import (
@@ -40,20 +51,6 @@ from backend.better_auth import (
 from backend.mcp_official_wrapper import mcp_official_wrapper as mcp_server
 from backend.agents_sdk import create_todo_agent, run_todo_agent, run_todo_agent_with_mcp_tools
 from backend.agent import AgentOrchestrator
-from backend.models import (
-    TaskResponse, TaskCreate, TaskUpdate,
-    UserCreate, UserLogin, UserResponse,
-    Token, TokenData,
-    MessageResponse,
-    ChatRequest, ChatResponse
-)
-from backend.database import get_session, init_db
-from dotenv import load_dotenv
-import os
-import uuid
-
-# Load the .env file in the backend folder
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
 app = FastAPI(
     title="Evolution of Todo - Phase 2 Backend",

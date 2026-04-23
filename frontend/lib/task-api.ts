@@ -1,6 +1,6 @@
 import { Task, CreateTaskRequest, UpdateTaskRequest } from '../types/task';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const BACKEND_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 // Helper function to get auth token
 const getAuthToken = (): string | null => {

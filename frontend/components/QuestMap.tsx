@@ -4,9 +4,11 @@ import { Task } from '@/types/task';
 interface QuestMapProps {
   tasks: Array<Task & { xp?: number; status?: string; description?: string }>;
   heroPosition: number;
+  /** Smaller path when embedded on the main dashboard */
+  compact?: boolean;
 }
 
-const QuestMap: React.FC<QuestMapProps> = ({ tasks, heroPosition }) => {
+const QuestMap: React.FC<QuestMapProps> = ({ tasks, heroPosition, compact = false }) => {
   // Calculate positions for each task on the map
   const taskPositions = tasks.map((task, index) => ({
     ...task,
@@ -16,7 +18,13 @@ const QuestMap: React.FC<QuestMapProps> = ({ tasks, heroPosition }) => {
   }));
 
   return (
-    <div className="relative w-full h-48 sm:h-64 quest-path overflow-hidden rounded-xl">
+    <div
+      className={
+        compact
+          ? 'relative w-full h-32 sm:h-36 quest-path overflow-hidden rounded-xl'
+          : 'relative w-full h-48 sm:h-64 quest-path overflow-hidden rounded-xl'
+      }
+    >
       {/* Path */}
       <div className="absolute top-1/2 left-0 right-0 h-5 bg-gradient-to-r from-yellow-700 via-yellow-600 to-yellow-700 transform -translate-y-1/2 z-0 rounded-full"></div>
 

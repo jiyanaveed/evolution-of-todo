@@ -6,8 +6,8 @@ import { AuthProvider } from '../contexts/AuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Evolution of Todo',
-  description: 'A modern task management application',
+  title: 'Momentum AI',
+  description: 'AI-assisted task management',
 };
 
 export default function RootLayout({

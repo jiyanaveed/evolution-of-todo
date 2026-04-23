@@ -24,6 +24,8 @@ class OpenAIClient:
         if not os.getenv("OPENAI_API_KEY"):
             load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
         self._api_key = os.getenv("OPENAI_API_KEY")
+        # OpenAI-compatible API (OpenAI, OpenRouter, etc.); see OPENAI_BASE_URL
+        self._base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
         self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
         # System prompt for the todo assistant
@@ -57,8 +59,9 @@ Always be helpful, friendly, and concise in your responses."""
                 self._api_key = os.getenv("OPENAI_API_KEY")
             if not self._api_key:
                 raise ValueError("OPENAI_API_KEY environment variable is not set")
+            self._base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
             from openai import OpenAI
-            self._client = OpenAI(api_key=self._api_key)
+            self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
         return self._client
 
     def is_configured(self) -> bool:

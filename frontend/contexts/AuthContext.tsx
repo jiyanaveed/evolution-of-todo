@@ -11,7 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
   register: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
   logout: () => void;
-  refetchUser: () => Promise<void>;
+  refetchUser: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +21,22 @@ interface AuthProviderProps {
 }
 
 // Get backend URL from environment variable
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const BACKEND_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+
+function formatApiDetail(detail: unknown): string {
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((e: { msg?: string; loc?: unknown } | string) =>
+        typeof e === 'string' ? e : e?.msg ?? JSON.stringify(e),
+      )
+      .join(' ');
+  }
+  if (detail && typeof detail === 'object' && 'msg' in (detail as object)) {
+    return String((detail as { msg: string }).msg);
+  }
+  return detail != null ? String(detail) : '';
+}
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,7 +44,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
 
-  const refetchUser = async () => {
+  /** Resolves to true if the current token yields a valid session from /api/auth/me */
+  const refetchUser = async (): Promise<boolean> => {
     const token = localStorage.getItem('better-auth.session_token');
 
     if (token) {
@@ -44,26 +60,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (response.ok) {
           const data = await response.json();
           if (data?.user) {
-            setUser(data.user);
+            const u = data.user;
+            setUser({
+              id: String(u.id),
+              email: u.email,
+              created_at: (u.createdAt as string) ?? (u.created_at as string) ?? '',
+            });
             setIsAuthenticated(true);
+            return true;
           }
-        } else {
-          throw new Error('Failed to fetch user');
+          setUser(null);
+          setIsAuthenticated(false);
+          return false;
         }
+        setUser(null);
+        setIsAuthenticated(false);
+        return false;
       } catch (err) {
         console.error('Failed to fetch user:', err);
         setUser(null);
         setIsAuthenticated(false);
+        return false;
       }
     } else {
       setUser(null);
       setIsAuthenticated(false);
     }
+    return false;
   };
 
   useEffect(() => {
-    refetchUser();
-    setLoading(false);
+    void (async () => {
+      await refetchUser();
+      setLoading(false);
+    })();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -84,17 +114,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const data = await response.json();
         if (data?.token) {
           localStorage.setItem('better-auth.session_token', data.token);
-          await refetchUser();
+          const sessionOk = await refetchUser();
+          if (!sessionOk) {
+            localStorage.removeItem('better-auth.session_token');
+            const msg =
+              'Signed in, but the server could not verify your session. Check NEXT_PUBLIC_API_BASE_URL and that the API is running.';
+            setError(msg);
+            return { success: false, error: new Error(msg) };
+          }
           return { success: true };
         } else {
           throw new Error('No token returned from server');
         }
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Login failed');
+        let msg = 'Login failed';
+        try {
+          const errorData = await response.json();
+          msg = formatApiDetail(errorData.detail) || msg;
+        } catch {
+          msg = response.statusText || msg;
+        }
+        throw new Error(msg);
       }
     } catch (err) {
-      setError('Login failed. Please check your credentials.');
+      const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
+      setError(message);
       console.error('Login error:', err);
       return { success: false, error: err };
     }
@@ -118,17 +162,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const data = await response.json();
         if (data?.token) {
           localStorage.setItem('better-auth.session_token', data.token);
-          await refetchUser();
+          const sessionOk = await refetchUser();
+          if (!sessionOk) {
+            localStorage.removeItem('better-auth.session_token');
+            const msg =
+              'Account created, but the server could not verify your session. Check NEXT_PUBLIC_API_BASE_URL and that the API is running.';
+            setError(msg);
+            return { success: false, error: new Error(msg) };
+          }
           return { success: true };
         } else {
           throw new Error('No token returned from server');
         }
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Registration failed');
+        let msg = 'Registration failed';
+        try {
+          const errorData = await response.json();
+          msg = formatApiDetail(errorData.detail) || msg;
+        } catch {
+          msg = response.statusText || msg;
+        }
+        throw new Error(msg);
       }
     } catch (err) {
-      setError('Registration failed. Email might already be in use.');
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Registration failed. Email might already be in use.';
+      setError(message);
       console.error('Registration error:', err);
       return { success: false, error: err };
     }

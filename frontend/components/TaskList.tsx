@@ -9,9 +9,18 @@ interface TaskListProps {
   onToggleTask: (id: number) => void;
   isLoading?: boolean;
   error?: string | null;
+  showOuterTitle?: boolean;
 }
 
-const TaskList = ({ tasks, onUpdateTask, onDeleteTask, onToggleTask, isLoading = false, error = null }: TaskListProps) => {
+const TaskList = ({
+  tasks,
+  onUpdateTask,
+  onDeleteTask,
+  onToggleTask,
+  isLoading = false,
+  error = null,
+  showOuterTitle = true,
+}: TaskListProps) => {
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -30,16 +39,18 @@ const TaskList = ({ tasks, onUpdateTask, onDeleteTask, onToggleTask, isLoading =
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">No tasks yet. Add your first task above!</p>
+      <div className="text-center py-6 px-2">
+        <p className="text-gray-600 text-sm">No tasks yet. Add one in chat or use your workflow above.</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Your Tasks</h2>
-      <div>
+      {showOuterTitle && (
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">Your Tasks</h2>
+      )}
+      <div className="space-y-0">
         {tasks.map((task) => (
           <TaskItem
             key={task.id}
@@ -48,6 +59,7 @@ const TaskList = ({ tasks, onUpdateTask, onDeleteTask, onToggleTask, isLoading =
             onDeleteTask={onDeleteTask}
             onToggleTask={onToggleTask}
             isLoading={isLoading}
+            variant="default"
           />
         ))}
       </div>
