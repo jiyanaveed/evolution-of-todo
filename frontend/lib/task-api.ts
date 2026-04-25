@@ -1,6 +1,7 @@
 import { Task, CreateTaskRequest, UpdateTaskRequest } from '../types/task';
+import { getPublicApiBaseUrl } from './api-base';
 
-const BACKEND_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const BACKEND_URL = getPublicApiBaseUrl();
 
 // Helper function to get auth token
 const getAuthToken = (): string | null => {

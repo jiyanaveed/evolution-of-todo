@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { getPublicApiBaseUrl } from '../../lib/api-base';
 
 function humanizeAuthError(message: string): string {
   const m = message.toLowerCase();
@@ -72,6 +73,11 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             {isLogin ? 'Welcome back' : 'Sign up to sync tasks and AI on any device'}
           </p>
+          {process.env.NODE_ENV === 'development' && (
+            <p className="mt-2 text-center text-xs text-gray-400 font-mono break-all" title="API base URL (dev only)">
+              API base: {getPublicApiBaseUrl()}
+            </p>
+          )}
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getPublicApiBaseUrl } from '../lib/api-base';
 import EmptyState from './EmptyState';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -73,11 +74,7 @@ export default function AIChatBox({ conversationId, onMutationSuccess }: ChatBox
     try {
       const token = getToken();
 
-      // Get the API base URL from environment variable
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-
-      // Ensure the base URL doesn't have a trailing slash for proper concatenation
-      const normalizedBaseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+      const normalizedBaseUrl = getPublicApiBaseUrl();
 
       // Call the backend API endpoint
       const url = `${normalizedBaseUrl}/api/${user.id}/chat`;

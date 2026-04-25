@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { User } from '../types/task';
+import { getPublicApiBaseUrl } from '../lib/api-base';
 
 interface AuthContextType {
   user: User | null;
@@ -20,8 +21,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Get backend URL from environment variable
-const BACKEND_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const BACKEND_URL = getPublicApiBaseUrl();
 
 function formatApiDetail(detail: unknown): string {
   if (typeof detail === 'string') return detail;
