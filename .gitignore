@@ -10,7 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Repo-root only (do not use bare `lib/` — it would ignore frontend/lib/)
+/lib/
 lib64/
 parts/
 sdist/

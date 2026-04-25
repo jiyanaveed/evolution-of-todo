@@ -1,10 +1,14 @@
 const path = require('path');
 
+/** App directory (this file lives in frontend/) */
+const appRoot = __dirname;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Monorepo: pin app root so Next does not pick the repo-level lockfile as the workspace root.
+  // Next may set outputFileTracingRoot; turbopack.root must match to avoid the build warning.
+  outputFileTracingRoot: appRoot,
   turbopack: {
-    root: path.join(__dirname),
+    root: appRoot,
   },
 };
 
