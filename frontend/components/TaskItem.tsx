@@ -154,14 +154,24 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTask, isLoading = 
   );
 
   if (isKanban) {
+    const rowGrid: React.CSSProperties = {
+      display: 'grid',
+      boxSizing: 'border-box',
+      width: '100%',
+      minWidth: 0,
+      maxWidth: '100%',
+      // Inline so production never drops arbitrary Tailwind grid cols; 1fr middle must be minmax(0,1fr)
+      gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+      columnGap: '0.7rem',
+      alignItems: 'start',
+    };
     return (
-      <div className={`${itemShell} min-w-0`}>
-        {/*
-          Flex row (not grid): use flex-1 + min-w-0 + basis-0 on the title column so the line box
-          always gets the remaining width (fixes one-char-per-line when the middle track collapses).
-        */}
-        <div className="flex w-full min-w-0 max-w-full flex-row items-start gap-2.5 sm:gap-3">
-          <div className="flex shrink-0 items-start gap-2.5">
+      <div
+        className={`${itemShell} min-w-0`}
+        style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
+      >
+        <div style={rowGrid}>
+          <div className="flex items-start gap-2.5">
             <input
               type="checkbox"
               checked={task.completed}
@@ -185,8 +195,8 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTask, isLoading = 
               ))}
           </div>
           <div
-            className="kanban-task-mid min-w-0 max-w-full flex-1 basis-0"
-            style={{ flex: '1 1 0%', minWidth: 0 }}
+            className="kanban-task-mid"
+            style={{ minWidth: 0, maxWidth: '100%' }}
           >
             {isEditing ? (
               <input
@@ -199,11 +209,23 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTask, isLoading = 
                 autoFocus
               />
             ) : (
-              <div className="min-w-0 w-full max-w-full">
+              <div
+                className="min-w-0 w-full max-w-full"
+                style={{ minWidth: 0 }}
+              >
                 <p
-                  className={`kanban-task-title text-left text-base font-semibold leading-snug ${
+                  className={`text-left text-base font-semibold leading-snug ${
                     task.completed ? 'text-slate-500' : 'text-slate-100'
                   }`}
+                  style={{
+                    margin: 0,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    width: '100%',
+                    wordBreak: 'normal',
+                    overflowWrap: 'break-word',
+                    whiteSpace: 'normal',
+                  }}
                   onDoubleClick={handleEdit}
                 >
                   {task.title}

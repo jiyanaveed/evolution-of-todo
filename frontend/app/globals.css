@@ -266,20 +266,9 @@ body {
     align-items: start;
   }
 
-  /* Middle column: must shrink (flex) / grow without min-content width forcing 0. */
+  /* Middle column: grid child — min-width 0 is required for 1fr to avoid overflow/min-content blow-up */
   .kanban-task-mid {
     min-width: 0;
     max-width: 100%;
-    flex: 1 1 0%;
-  }
-
-  .kanban-task-title {
-    box-sizing: border-box;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    word-break: normal;
-    overflow-wrap: break-word;
-    white-space: normal;
   }
 }

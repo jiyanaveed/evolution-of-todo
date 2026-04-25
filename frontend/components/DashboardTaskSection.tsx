@@ -37,12 +37,16 @@ function KanbanPanel({
     <div className="kanban-board-cols">
       <div
         className="min-w-0 w-full max-w-full rounded-2xl border border-cyan-500/50 bg-slate-900/80 p-4 sm:p-5 shadow-[0_0_24px_rgba(34,211,238,0.12),inset_0_1px_0_0_rgba(34,211,238,0.12)]"
+        style={{ minWidth: 0 }}
       >
         <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-200/90">
           To do <span className="font-mono text-cyan-300">({open.length})</span>
         </h3>
         <p className="mt-0.5 text-xs text-cyan-200/50">Not started or in progress</p>
-        <div className="mt-4 flex w-full min-w-0 max-w-full flex-col gap-3.5">
+        <div
+          className="mt-4 flex w-full min-w-0 max-w-full flex-col gap-3.5"
+          style={{ minWidth: 0 }}
+        >
           {open.length === 0 ? (
             <p className="rounded-xl border border-dashed border-cyan-500/30 bg-slate-950/50 py-8 text-center text-sm text-cyan-200/50">
               No tasks yet
@@ -64,12 +68,16 @@ function KanbanPanel({
       </div>
       <div
         className="min-w-0 w-full max-w-full rounded-2xl border border-emerald-500/45 bg-slate-900/80 p-4 sm:p-5 shadow-[0_0_24px_rgba(52,211,153,0.1),inset_0_1px_0_0_rgba(52,211,153,0.1)]"
+        style={{ minWidth: 0 }}
       >
         <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-200/90">
           Done <span className="font-mono text-emerald-300">({done.length})</span>
         </h3>
         <p className="mt-0.5 text-xs text-emerald-200/50">Completed work</p>
-        <div className="mt-4 flex w-full min-w-0 max-w-full flex-col gap-3.5">
+        <div
+          className="mt-4 flex w-full min-w-0 max-w-full flex-col gap-3.5"
+          style={{ minWidth: 0 }}
+        >
           {done.length === 0 ? (
             <p className="rounded-xl border border-dashed border-emerald-500/30 bg-slate-950/50 py-8 text-center text-sm text-emerald-200/50">
               All caught up 🎉
