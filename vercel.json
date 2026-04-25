@@ -3,5 +3,16 @@
   "name": "evolution-of-todo",
   "env": {
     "NEXT_PUBLIC_API_BASE_URL": "https://evolution-of-todo-backend.onrender.com"
+  },
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend",
+      "routePrefix": "/",
+      "framework": "nextjs"
+    },
+    "backend": {
+      "entrypoint": "backend",
+      "routePrefix": "/_/backend"
+    }
   }
 }
