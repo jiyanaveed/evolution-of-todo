@@ -145,7 +145,7 @@ function HomeDashboard() {
           <strong>Account created.</strong> You&apos;re signed in — welcome to Momentum AI.
         </div>
       )}
-      <main className="container mx-auto p-3 sm:p-4 max-w-6xl">
+      <main className="container mx-auto max-w-7xl p-3 sm:p-4">
         <div className="mb-4">
           <p className="text-sm text-gray-600 max-w-2xl">
             Pick how tasks are shown.{' '}
@@ -156,8 +156,10 @@ function HomeDashboard() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full min-w-0">
-          <div className="min-w-0">
+        <div
+          className="mt-4 grid w-full min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] lg:gap-7"
+        >
+          <div className="min-w-0 w-full max-w-full">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">AI assistant</h2>
             <ErrorBoundary>
               <AIChatBox

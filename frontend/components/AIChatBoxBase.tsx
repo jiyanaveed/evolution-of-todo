@@ -149,14 +149,18 @@ export default function AIChatBox({ conversationId, onMutationSuccess, compact =
   };
 
   const heightClass = compact
-    ? 'h-[min(20rem,42vh)] sm:h-[min(22rem,45vh)]'
+    ? 'h-[min(15rem,36vh)] sm:h-[min(17rem,38vh)]'
     : 'h-[550px]';
 
   return (
     <div
       className={`flex flex-col ${heightClass} border border-gray-200 rounded-xl bg-white shadow-lg overflow-hidden`}
     >
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
+      <div
+        className={`flex-1 overflow-y-auto space-y-3 sm:space-y-4 ${
+          compact ? 'p-2.5 sm:p-3' : 'p-3 sm:p-4'
+        }`}
+      >
         {messages.length === 0 && (
           <div className={`text-center text-gray-400 ${compact ? 'mt-6' : 'mt-20'}`}>
             <p className={compact ? 'text-sm' : 'text-lg'}>Start a conversation with your AI assistant</p>
@@ -188,7 +192,8 @@ export default function AIChatBox({ conversationId, onMutationSuccess, compact =
           e.preventDefault();
           handleSend();
         }}
-        className="p-4 border-t bg-gray-50">
+        className={compact ? 'p-2.5 sm:p-3 border-t bg-gray-50' : 'p-4 border-t bg-gray-50'}
+      >
         <div className="flex gap-2">
           <input
             name="content"
