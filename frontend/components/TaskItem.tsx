@@ -156,8 +156,12 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTask, isLoading = 
   if (isKanban) {
     return (
       <div className={`${itemShell} min-w-0`}>
-        <div className="kanban-task-row gap-x-2.5 gap-y-1 sm:gap-x-3">
-          <div className="flex min-w-0 items-start gap-2.5">
+        {/*
+          Flex row (not grid): use flex-1 + min-w-0 + basis-0 on the title column so the line box
+          always gets the remaining width (fixes one-char-per-line when the middle track collapses).
+        */}
+        <div className="flex w-full min-w-0 max-w-full flex-row items-start gap-2.5 sm:gap-3">
+          <div className="flex shrink-0 items-start gap-2.5">
             <input
               type="checkbox"
               checked={task.completed}
@@ -180,7 +184,10 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTask, isLoading = 
                 </span>
               ))}
           </div>
-          <div className="kanban-task-mid">
+          <div
+            className="kanban-task-mid min-w-0 max-w-full flex-1 basis-0"
+            style={{ flex: '1 1 0%', minWidth: 0 }}
+          >
             {isEditing ? (
               <input
                 type="text"
@@ -207,7 +214,7 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTask, isLoading = 
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-start justify-self-end gap-0.5 pt-0.5 sm:gap-1">
+          <div className="flex shrink-0 items-start gap-0.5 pt-0.5 sm:gap-1">
             {defaultActions()}
           </div>
         </div>

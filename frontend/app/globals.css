@@ -256,6 +256,7 @@ body {
     }
   }
 
+  /* Legacy grid row (unused if flex layout) — safe to keep */
   .kanban-task-row {
     display: grid;
     width: 100%;
@@ -265,14 +266,18 @@ body {
     align-items: start;
   }
 
+  /* Middle column: must shrink (flex) / grow without min-content width forcing 0. */
   .kanban-task-mid {
     min-width: 0;
     max-width: 100%;
+    flex: 1 1 0%;
   }
 
   .kanban-task-title {
+    box-sizing: border-box;
     min-width: 0;
     width: 100%;
+    max-width: 100%;
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
